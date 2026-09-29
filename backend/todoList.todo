@@ -1,0 +1,16 @@
+1. npm init and install dependences.
+2. connect to the DB , and dont forget to require("dotenv").config.
+
+3. Create the model. Using new mongoose.Schema({}) and mongoose.model("collection name", modelName);
+4. Create the routes for that.
+
+5. then const router = express.Router()
+6. while creating routes dont forget to const { body , validatonResult} = require("express-validator")
+
+7. while writing anything is async function use try and catch block
+8. When routers are created to export:  module.exports = routers;
+
+
+and in index.js / app.js we do app.use(express.json()) if we are using json format. also this is where we use app.listen() to connect to the port.
+
+*** dont forget to return res.status() for success and error very IMPORTANT. *** 

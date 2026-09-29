@@ -1,0 +1,36 @@
+import { useState } from 'react'
+import AuthLayout, { PasswordField } from '../components/AuthLayout'
+
+const SignInPage = ({ onSignIn }) => {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function signIn(event) {
+    event.preventDefault()
+    if (!onSignIn) return
+    setBusy(true)
+    setError('')
+    try { await onSignIn({ email: email.trim(), password }) }
+    catch (err) { setError(err.message || 'Unable to sign in. Check your details and try again.') }
+    finally { setBusy(false) }
+  }
+
+  return (
+    <AuthLayout mode="signin">
+      <div className="w-full max-w-420px max-md:max-w-440px [&_h1]:mb-3 [&_h1]:text-[32px] [&_h1]:leading-[1.2] [&_h1]:font-semibold [&_h1]:tracking-[-1.2px] max-md:[&_h1]:text-3xl">
+        <h1>Welcome back.</h1>
+        <p className="mb-8 text-[15px] leading-[1.7] wrap-break-words text-muted [&_strong]:font-medium [&_strong]:text-ink">Pick up where you left off.</p>
+        <form className="flex flex-col gap-5" onSubmit={signIn}>
+          <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none"><label htmlFor="email">Email address</label><input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)}/></div>
+          <PasswordField id="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)}/>
+          {error && <p className="text-[13px] leading-[1.6] text-[#a02b22]" role="alert">{error}</p>}
+          <button className="flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-ink bg-ink px-4 py-3 text-sm font-semibold text-white no-underline transition-colors duration-150 hover:enabled:bg-[#493b30] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none [&>span]:text-xl [&>span]:font-normal" disabled={busy || !onSignIn}>{busy ? 'Signing in…' : 'Sign in'}<span aria-hidden="true">→</span></button>
+        </form>
+      </div>
+    </AuthLayout>
+  )
+}
+
+export default SignInPage
