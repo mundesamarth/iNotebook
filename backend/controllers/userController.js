@@ -4,7 +4,7 @@ const userModel = require("../models/userSchema");
 const sendOTPToEmail = require("../services/otpGenerator");
 const OTPModel = require("../models/OTPModel");
 
-const  jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const userController = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -23,17 +23,27 @@ const userController = async (req, res) => {
       .sort({ _id: -1 })
       .limit(1);
 
-    if (exist_otp.otp_code !== req.body.otp) {
+    if (!exist_otp) {
       return res
         .status(400)
         .json({ message: "Invalid Authentication", success: false });
     }
 
-    if (exist_otp.length === 0) {
+    if (exist_otp.attempts >= 5) {
+      await OTPModel.deleteOne({ _id: exist_otp._id });
+      return res.status(429).json({
+        message: "Too many OTP attempts",
+        success: false,
+      });
+    }
+    if (exist_otp.otp_code !== req.body.otp) {
+      exist_otp.attempts += 1;
+      await exist_otp.save();
       return res
         .status(400)
         .json({ message: "Invalid Authentication", success: false });
     }
+
     let entrydate = new Date(exist_otp.createdAt);
 
     entrydate = entrydate.getTime() + 10 * 60 * 1000;
@@ -41,6 +51,7 @@ const userController = async (req, res) => {
     let currectTime = new Date().getTime();
 
     if (currectTime > entrydate) {
+      await OTPModel.deleteMany({ email: req.body.email });
       return res.status(400).json({ message: "OTP Expired", success: false });
     }
     const exist_email = await userModel.findOne({ email: email });
@@ -75,6 +86,7 @@ const userController = async (req, res) => {
     });
 
     await newUser.save();
+    await OTPModel.deleteMany({ email: req.body.email });
     console.log("User have been successfully added gang");
     return res.status(200).json({
       message: "Data has been added gang",
@@ -89,8 +101,6 @@ const userController = async (req, res) => {
     });
   }
 };
-
-
 
 const loginUser = async (req, res) => {
   try {
@@ -121,9 +131,10 @@ const loginUser = async (req, res) => {
       {
         _id: exist_email._id,
         email: exist_email.email,
-        phone_no: exist_email.email,
+        phone_no: exist_email.phone_no,
       },
       process.env.KEY,
+      { expiresIn: "1d" },
     );
 
     return res
@@ -131,8 +142,8 @@ const loginUser = async (req, res) => {
       .json({ message: "Login Successful", success: true, token: token });
   } catch (error) {
     return res
-      .status(500)
-      .json({ message: "Interval server error at login User", status: false });
+      .status(401)
+      .json({ message: "Invalid or expired token", success: false });
   }
 };
 
@@ -147,6 +158,20 @@ const sendOTP = async (req, res) => {
         status: false,
       });
     }
+    const lastOtp = await OTPModel.findOne({ email: req.body.email }).sort({
+      createdAt: -1,
+    });
+
+    if (lastOtp) {
+      const timePassed = Date.now() - new Date(lastOtp.createdAt).getTime();
+
+      if (timePassed < 60 * 1000) {
+        return res.status(429).json({
+          message: "Please wait before requesting another OTP",
+          success: false,
+        });
+      }
+    }
 
     await sendOTPToEmail(req.body.email);
 
@@ -154,9 +179,10 @@ const sendOTP = async (req, res) => {
       .status(200)
       .json({ message: "OTP sent successfully", success: true });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Internal Server Error at yser controller ", success: false });
+    return res.status(500).json({
+      message: "Internal Server Error at yser controller ",
+      success: false,
+    });
   }
 };
 module.exports = { userController, loginUser, sendOTP };

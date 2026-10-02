@@ -1,16 +1,13 @@
 const OTPModel = require("../models/OTPModel");
 const transporter = require("./nodemailer");
-
+const crypto = require("crypto")
 function generateSixDigitCode() {
-  return Math.floor(100000 + Math.random() * 900000);
-}
+return crypto.randomInt(100000, 1000000);}
 
-const sendOTPToEmail = async (email, req, res) => {
+const sendOTPToEmail = async (email) => {
   try {
-    if (typeof email === "undefined" || typeof email === "") {
-      return res
-        .status(400)
-        .json({ message: "Invalid email 123", success: false });
+    if (typeof email === "undefined" ||  email === "") {
+      throw new Error("Invalid Email");
     }
 
     const otp = generateSixDigitCode();
@@ -202,13 +199,8 @@ const sendOTPToEmail = async (email, req, res) => {
     });
 
     await newEntry.save();
-
-  
-    return res
-      .status(200)
-      .json({ message: "OTP sent successfully", success: true });
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 };
 
