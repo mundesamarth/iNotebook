@@ -7,7 +7,7 @@ export function PasswordField({ id, label = 'Password', autoComplete = 'new-pass
     <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none">
       <label htmlFor={id}>{label}</label>
       <div className="relative [&_input]:pr-14 [&>button]:absolute [&>button]:top-0 [&>button]:right-0.5 [&>button]:h-11.5 [&>button]:cursor-pointer [&>button]:border-0 [&>button]:bg-transparent [&>button]:px-2.5 [&>button]:text-[11px] [&>button]:text-muted">
-        <input id={id} name={id} type={visible ? 'text' : 'password'} autoComplete={autoComplete} required {...props} />
+        <input id={id} name={id} type={visible ? 'text' : 'password'} autoComplete={autoComplete} {...props} />
         <button type="button" onClick={() => setVisible(!visible)} aria-label={`${visible ? 'Hide' : 'Show'} ${label.toLowerCase()}`} aria-pressed={visible}>{visible ? 'Hide' : 'Show'}</button>
       </div>
     </div>

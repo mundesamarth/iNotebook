@@ -17,7 +17,7 @@ const userController = async (req, res) => {
       });
     }
 
-    const { name, email, phone_no, password, confirm_password } = req.body;
+    const { name, email, phonenumber, password, confirmPassword } = req.body;
 
     const exist_otp = await OTPModel.findOne({ email: req.body.email })
       .sort({ _id: -1 })
@@ -62,7 +62,7 @@ const userController = async (req, res) => {
         .json({ message: "Email already exists", success: false });
     }
 
-    const exist_phone_no = await userModel.findOne({ phone_no: phone_no });
+    const exist_phone_no = await userModel.findOne({ phonenumber: phonenumber });
 
     if (exist_phone_no) {
       return res
@@ -70,7 +70,7 @@ const userController = async (req, res) => {
         .json({ message: "Phone number already exists", success: false });
     }
 
-    if (password !== confirm_password) {
+    if (password !== confirmPassword) {
       return res
         .status(400)
         .json({ message: "Password does not match", success: false });
@@ -81,7 +81,7 @@ const userController = async (req, res) => {
     const newUser = new userModel({
       name: req.body.name,
       email: req.body.email,
-      phone_no: req.body.phone_no,
+      phonenumber: req.body.phonenumber,
       password: hash,
     });
 
@@ -131,7 +131,7 @@ const loginUser = async (req, res) => {
       {
         _id: exist_email._id,
         email: exist_email.email,
-        phone_no: exist_email.phone_no,
+        phonenumber: exist_email.phonenumber,
       },
       process.env.KEY,
       { expiresIn: "1d" },
@@ -147,7 +147,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-const sendOTP = async (req, res) => {
+const sendOTPController = async (req, res) => {
   try {
     const errors = validationResult(req);
 
@@ -185,4 +185,4 @@ const sendOTP = async (req, res) => {
     });
   }
 };
-module.exports = { userController, loginUser, sendOTP };
+module.exports = { userController, loginUser, sendOTPController };

@@ -1,12 +1,11 @@
 const express = require("express");
-const bcrypt = require("bcryptjs");
 const routers = express.Router();
-const { body, validationResult } = require("express-validator");
-const userModel = require("../models/userSchema");
+const { body } = require("express-validator");
+
 const {
   userController,
   loginUser,
-  sendOTP,
+  sendOTPController,
 } = require("../controllers/userController");
 
 routers.post(
@@ -54,6 +53,6 @@ routers.post(
 routers.post(
   "/sendOTPToEmail",
   [body("email").isEmail().withMessage("Invalid Email")],
-  sendOTP,
+  sendOTPController,
 );
 module.exports = routers;
