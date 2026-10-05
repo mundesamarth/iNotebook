@@ -3,10 +3,21 @@ import AuthLayout, { PasswordField } from '../components/AuthLayout'
 
 const SignUpPage = () => {
   const [showOtp, setShowOtp] = useState(false)
-
-
-
+  const [details, setDetails] = useState({name:'',email:'',phonenumber:'',password:'',confirmPassword:''});
+  const [error,setError] = useState('');
+  const [busy,setBusy] = useState(false);
+  const [state,setState] = useState('details');
   
+
+  const handleChange = (event) =>{
+    const {name,value}  = event.target
+    setDetails((currentForm) => ({...currentForm,[name]:value}))
+  } 
+
+  //Form validation
+  
+  // Sending OTP,
+
   return (
     <AuthLayout>
       <div className="w-full max-w-420px max-md:max-w-440px">
@@ -21,19 +32,19 @@ const SignUpPage = () => {
           <form className="flex flex-col gap-5" onSubmit={(event) => event.preventDefault()}>
             <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none">
               <label htmlFor="name">Full name</label>
-              <input id="name" name="name" autoComplete="name" />
+              <input id="name" name="name" autoComplete="name" value={details.name} onChange={handleChange}/>
             </div>
             <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none">
               <label htmlFor="email">Email address</label>
-              <input id="email" name="email" type="email" autoComplete="email" />
+              <input id="email" name="email" type="email" autoComplete="email" value={details.email} onChange={handleChange}/>
             </div>
             <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none">
-              <label htmlFor="phone_no">Phone number</label>
-              <input id="phone_no" name="phone_no" type="tel" autoComplete="tel" />
+              <label htmlFor="phonenumber">Phone number</label>
+              <input id="phonenumber" name="phonenumber" type="tel" autoComplete="tel" value={details.phonenumber} onChange={handleChange}/>
             </div>
             <div className="grid grid-cols-2 gap-4 max-[1050px]:grid-cols-1 max-md:grid-cols-2 max-[390px]:grid-cols-1">
-              <PasswordField id="password" />
-              <PasswordField id="confirm_password" label="Confirm password" />
+              <PasswordField id="password" value={details.password} onChange={handleChange}/>
+              <PasswordField id="confirmPassword" label="Confirm password" value={details.password} onChange={handleChange}/>
             </div>
             <button type="button" className="flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-ink bg-ink px-4 py-3 text-sm font-semibold text-white no-underline transition-colors duration-150 hover:enabled:bg-[#493b30] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none [&>span]:text-xl [&>span]:font-normal" onClick={() => setShowOtp(true)}>
               Create new account <span aria-hidden="true">→</span>

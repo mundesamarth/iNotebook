@@ -11,7 +11,7 @@ const new_user_schema = new mongoose.Schema({
         required:true,
         unique:true,
     },
-    phone_no: {
+    phonenumber: {
         type:String,
         required:true,
         unique:true,

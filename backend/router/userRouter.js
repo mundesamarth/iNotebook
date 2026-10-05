@@ -23,7 +23,7 @@ routers.post(
       .isLength({ min: 3, max: 26 })
       .withMessage("Should be min of 3 and max of 26 character"),
     body("email").isEmail().withMessage("Invalid Email"),
-    body("phone_no").isMobilePhone("en-IN").withMessage("Indian numbers only"),
+    body("phoneNumber").isMobilePhone("en-IN").withMessage("Indian numbers only"),
     body("password")
       .isString()
       .withMessage("Invalid Password")
