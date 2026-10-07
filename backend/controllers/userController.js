@@ -26,7 +26,7 @@ const userController = async (req, res) => {
     if (!exist_otp) {
       return res
         .status(400)
-        .json({ message: "Invalid Authentication", success: false });
+        .json({ message: "OTP Code Expired ", success: false });
     }
 
     if (exist_otp.attempts >= 5) {
@@ -41,7 +41,7 @@ const userController = async (req, res) => {
       await exist_otp.save();
       return res
         .status(400)
-        .json({ message: "Invalid Authentication", success: false });
+        .json({ message: "Wrong Verification Code", success: false });
     }
 
     let entrydate = new Date(exist_otp.createdAt);
@@ -173,6 +173,16 @@ const sendOTPController = async (req, res) => {
       }
     }
 
+    const findEmail = await userModel.findOne({email: req.body.email});
+
+    if(findEmail) {
+      return res.status(400).json({
+        message: "Email Address already exists, please sign in",
+        success: false
+      })
+    }
+
+    
     await sendOTPToEmail(req.body.email);
 
     return res
@@ -180,7 +190,7 @@ const sendOTPController = async (req, res) => {
       .json({ message: "OTP sent successfully", success: true });
   } catch (error) {
     return res.status(500).json({
-      message: "Internal Server Error at yser controller ",
+      message: "Internal Server Error at OTP controller ",
       success: false,
     });
   }
