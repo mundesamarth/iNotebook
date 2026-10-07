@@ -1,78 +1,230 @@
-import { useState } from 'react'
-import AuthLayout, { PasswordField } from '../components/AuthLayout'
+import { useState } from "react";
+import { gooeyToast } from "goey-toast";
 
-const SignUpPage = () => {
-  const [showOtp, setShowOtp] = useState(false)
-  const [details, setDetails] = useState({name:'',email:'',phonenumber:'',password:'',confirmPassword:''});
-  const [error,setError] = useState('');
-  const [busy,setBusy] = useState(false);
-  const [state,setState] = useState('details');
-  
+import AuthLayout from "../components/AuthLayout";
+import SignUpForm from "../components/auth/SignUpForm";
+import OtpForm from "../components/auth/OtpForm";
+import { useNavigate } from "react-router";
 
-  const handleChange = (event) =>{
-    const {name,value}  = event.target
-    setDetails((currentForm) => ({...currentForm,[name]:value}))
-  } 
+export default function SignUpPage() {
+  const navigation = useNavigate();
+  const [showOtp, setShowOtp] = useState(false);
+  const [otp, setOtp] = useState("");
 
-  //Form validation
-  
-  // Sending OTP,
+  const [details, setDetails] = useState({
+    name: "",
+    email: "",
+    phonenumber: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+
+    setDetails((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
+    setFieldErrors((current) => ({
+      ...current,
+      [name]: "",
+      ...(name === "password" ? { confirmPassword: "" } : {}),
+    }));
+
+    setError("");
+  }
+
+  function validateForm(form) {
+    const errors = {};
+
+    const nameLength = Array.from(details.name.trim()).length;
+
+    if (nameLength < 3 || nameLength > 26) {
+      errors.name = "Your name must be between 3–26 characters.";
+    }
+
+    const emailInput = form.elements.namedItem("email");
+
+    if (!emailInput.validity.valid) {
+      errors.email = "Enter a valid email address.";
+    }
+
+    if (!/^(\+?91|0)?[6789]\d{9}$/.test(details.phonenumber)) {
+      errors.phonenumber =
+        "Enter a valid Indian mobile number, optionally prefixed with +91, 91, or 0.";
+    }
+
+    const passwordLength = Array.from(details.password).length;
+
+    if (passwordLength < 8 || passwordLength > 26) {
+      errors.password = "Your password must be 8–26 characters.";
+    }
+
+    const confirmationLength = Array.from(details.confirmPassword).length;
+
+    if (confirmationLength < 8 || confirmationLength > 26) {
+      errors.confirmPassword = "Confirm your password using 8–26 characters.";
+    } else if (details.password !== details.confirmPassword) {
+      errors.confirmPassword = "Your passwords don’t match.";
+    }
+
+    setFieldErrors(errors);
+
+    const firstInvalidField = Object.keys(errors)[0];
+
+    if (firstInvalidField) {
+      form.elements.namedItem(firstInvalidField)?.focus();
+    }
+
+    return !firstInvalidField;
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    if (busy) return;
+
+    setError("");
+
+    if (!validateForm(event.currentTarget)) return;
+
+    setBusy(true);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/user/sendOTPToEmail`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: details.email,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Could not send OTP.");
+      }
+
+      gooeyToast.success("OTP sent successfully", {
+        description: "Check your email for the verification code.",
+      });
+
+      setOtp("");
+      setShowOtp(true);
+    } catch (err) {
+      gooeyToast.error(err.message || "Could not send OTP.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCreateNewUser() {
+    if (busy) return;
+
+    setError("");
+
+    if (!/^\d{6}$/.test(otp)) {
+      setError("Enter a valid 6-digit OTP.");
+      return;
+    }
+
+    setBusy(true);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/user/create-new-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: details.name.trim(),
+            email: details.email,
+            phonenumber: details.phonenumber,
+            password: details.password,
+            confirmPassword: details.confirmPassword,
+            otp: otp,
+          }),
+        },
+      );
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Could not create account.");
+      }
+
+      gooeyToast.success("Account Created Successfully", {
+        description: "You can now sign in.",
+      });
+
+      navigation("/signin");
+    } catch (error) {
+      setError(error.message || "Could not create account. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  function handleBack() {
+    setShowOtp(false);
+    setOtp("");
+    setError("");
+  }
 
   return (
     <AuthLayout>
       <div className="w-full max-w-420px max-md:max-w-440px">
-        <ol className="mb-10 flex gap-6 text-xs text-muted" aria-label="Account creation progress">
-          <li className={!showOtp ? 'font-semibold text-accent' : ''} aria-current={!showOtp ? 'step' : undefined}>1. Your details</li>
-          <li className={showOtp ? 'font-semibold text-accent' : ''} aria-current={showOtp ? 'step' : undefined}>2. Verify email</li>
+        <ol
+          className="mb-10 flex gap-6 text-xs text-muted"
+          aria-label="Account creation progress"
+        >
+          <li
+            className={!showOtp ? "font-semibold text-accent" : ""}
+            aria-current={!showOtp ? "step" : undefined}
+          >
+            1. Your details
+          </li>
+
+          <li
+            className={showOtp ? "font-semibold text-accent" : ""}
+            aria-current={showOtp ? "step" : undefined}
+          >
+            2. Verify email
+          </li>
         </ol>
 
-        <section hidden={showOtp}>
-          <h1 className="mb-3 text-[32px] leading-tight font-semibold tracking-[-1.2px] max-md:text-3xl">Create your account</h1>
-          <p className="mb-8 text-[15px] leading-relaxed text-muted">A fresh page starts here.</p>
-          <form className="flex flex-col gap-5" onSubmit={(event) => event.preventDefault()}>
-            <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none">
-              <label htmlFor="name">Full name</label>
-              <input id="name" name="name" autoComplete="name" value={details.name} onChange={handleChange}/>
-            </div>
-            <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none">
-              <label htmlFor="email">Email address</label>
-              <input id="email" name="email" type="email" autoComplete="email" value={details.email} onChange={handleChange}/>
-            </div>
-            <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none">
-              <label htmlFor="phonenumber">Phone number</label>
-              <input id="phonenumber" name="phonenumber" type="tel" autoComplete="tel" value={details.phonenumber} onChange={handleChange}/>
-            </div>
-            <div className="grid grid-cols-2 gap-4 max-[1050px]:grid-cols-1 max-md:grid-cols-2 max-[390px]:grid-cols-1">
-              <PasswordField id="password" value={details.password} onChange={handleChange}/>
-              <PasswordField id="confirmPassword" label="Confirm password" value={details.password} onChange={handleChange}/>
-            </div>
-            <button type="button" className="flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-ink bg-ink px-4 py-3 text-sm font-semibold text-white no-underline transition-colors duration-150 hover:enabled:bg-[#493b30] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none [&>span]:text-xl [&>span]:font-normal" onClick={() => setShowOtp(true)}>
-              Create new account <span aria-hidden="true">→</span>
-            </button>
-          </form>
-          <p className="mt-5 text-center text-xs leading-relaxed text-muted">Next, verify your email with a one-time code.</p>
-        </section>
-
-        <section hidden={!showOtp}>
-          <h1 className="mb-3 text-[32px] leading-tight font-semibold tracking-[-1.2px] max-md:text-3xl">Check your email</h1>
-          <p className="mb-8 text-[15px] leading-relaxed text-muted">Enter the verification code for your email address.</p>
-          <form className="flex flex-col gap-5" onSubmit={(event) => event.preventDefault()}>
-            <div className="flex min-w-0 flex-col gap-2 [&>label]:text-[13px] [&>label]:font-semibold [&_input]:h-11.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-md [&_input]:border [&_input]:border-[#cfc8bf] [&_input]:bg-white [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-ink [&_input]:transition-colors [&_input]:duration-150 [&_input:hover]:border-[#9b8d7f] [&_input:focus]:border-transparent [&_input:focus]:outline-2 [&_input:focus]:outline-offset-2 [&_input:focus]:outline-accent motion-reduce:[&_input]:transition-none">
-              <label htmlFor="otp">Verification code</label>
-              <input className="h-16! pl-6! text-center text-[28px] tracking-[.55em] tabular-nums" id="otp" name="otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} aria-describedby="otp-hint" />
-              <p id="otp-hint" className="text-xs leading-relaxed text-muted">Enter your 6-digit code.</p>
-            </div>
-            {/* Connect verification and resend when adding your backend requests. */}
-            <button type="button" className="flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 rounded-md border border-ink bg-ink px-4 py-3 text-sm font-semibold text-white no-underline transition-colors duration-150 hover:enabled:bg-[#493b30] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none [&>span]:text-xl [&>span]:font-normal">Verify email <span aria-hidden="true">→</span></button>
-          </form>
-          <p className="mt-6 text-[13px] text-muted">
-            Didn’t receive a code? <button type="button" className="cursor-pointer font-semibold text-accent hover:underline">Resend code</button>
-          </p>
-          <button type="button" className="mt-7 cursor-pointer text-[13px] font-semibold text-accent hover:underline" onClick={() => setShowOtp(false)}>← Back to your details</button>
-        </section>
+        {showOtp ? (
+          <OtpForm
+            email={details.email}
+            otp={otp}
+            busy={busy}
+            onOtpChange={setOtp}
+            onBack={handleBack}
+            onVerify={handleCreateNewUser}
+            error={error}
+          />
+        ) : (
+          <SignUpForm
+            details={details}
+            fieldErrors={fieldErrors}
+            error={error}
+            busy={busy}
+            onChange={handleChange}
+            onSubmit={handleSubmit}
+          />
+        )}
       </div>
     </AuthLayout>
-  )
+  );
 }
-
-export default SignUpPage

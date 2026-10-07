@@ -1,10 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import { GooeyToaster } from "goey-toast";
+import 'goey-toast/styles.css'
 import App from './App.jsx'
-
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <GooeyToaster position="bottom-right" />;
+
     <App />
   </StrictMode>,
 )
