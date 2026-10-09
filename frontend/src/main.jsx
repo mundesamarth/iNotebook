@@ -6,7 +6,7 @@ import 'goey-toast/styles.css'
 import App from './App.jsx'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <GooeyToaster position="bottom-right" />;
+    <GooeyToaster position="bottom-right" />
 
     <App />
   </StrictMode>,

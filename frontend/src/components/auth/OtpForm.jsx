@@ -5,6 +5,7 @@ export default function OtpForm({
   onOtpChange,
   onBack,
   onVerify,
+  error,
   onResend,
 }) {
   return (
@@ -53,14 +54,18 @@ export default function OtpForm({
           </p>
         </div>
 
-       
+        {error && (
+          <p className="text-sm text-red-700" role="alert">
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
           disabled={busy || otp.length !== 6 || !onVerify}
           className="flex min-h-12 w-full items-center justify-between rounded-md bg-ink px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Verify email
+         {busy ? "Verifying...." : "Verify Email"}
           <span aria-hidden="true">→</span>
         </button>
       </form>

@@ -5,7 +5,10 @@ import AuthLayout from "../components/AuthLayout";
 import SignUpForm from "../components/auth/SignUpForm";
 import OtpForm from "../components/auth/OtpForm";
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
 
+// Todo Resend OTP function
+// todo expired JWT token verification function
 export default function SignUpPage() {
   const navigation = useNavigate();
   const [showOtp, setShowOtp] = useState(false);
@@ -105,7 +108,7 @@ export default function SignUpPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: details.email,
+            email: details.email.trim(),
           }),
         },
       );
@@ -151,7 +154,7 @@ export default function SignUpPage() {
           },
           body: JSON.stringify({
             name: details.name.trim(),
-            email: details.email,
+            email: details.email.trim(),
             phonenumber: details.phonenumber,
             password: details.password,
             confirmPassword: details.confirmPassword,
@@ -169,7 +172,7 @@ export default function SignUpPage() {
         description: "You can now sign in.",
       });
 
-      navigation("/signin");
+      navigation("/signin",{replace:true});
     } catch (error) {
       setError(error.message || "Could not create account. Please try again.");
     } finally {
@@ -181,7 +184,11 @@ export default function SignUpPage() {
     setOtp("");
     setError("");
   }
-
+  useEffect(() => {
+    if (sessionStorage.getItem("token")) {
+      navigation("/", { replace: true });
+    }
+  }, [navigation]);
   return (
     <AuthLayout>
       <div className="w-full max-w-420px max-md:max-w-440px">
@@ -209,7 +216,10 @@ export default function SignUpPage() {
             email={details.email}
             otp={otp}
             busy={busy}
-            onOtpChange={setOtp}
+            onOtpChange={(value)=>{
+              setOtp(value);
+              setError("")
+            }}
             onBack={handleBack}
             onVerify={handleCreateNewUser}
             error={error}

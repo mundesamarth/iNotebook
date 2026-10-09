@@ -62,7 +62,9 @@ const userController = async (req, res) => {
         .json({ message: "Email already exists", success: false });
     }
 
-    const exist_phone_no = await userModel.findOne({ phonenumber: phonenumber });
+    const exist_phone_no = await userModel.findOne({
+      phonenumber: phonenumber,
+    });
 
     if (exist_phone_no) {
       return res
@@ -118,13 +120,23 @@ const loginUser = async (req, res) => {
     if (!exist_email) {
       return res
         .status(400)
-        .json({ message: "Email does not exists gang", status: false });
+        .json({
+          message: "Email does not exists ",
+          status: false,
+          code: "EMAIL_NOT_FOUND",
+        });
     }
 
     const flag = bcrypt.compareSync(req.body.password, exist_email.password);
 
     if (!flag) {
-      return res.status(400).json({ message: "Wrong Password", status: false });
+      return res
+        .status(400)
+        .json({
+          message: "Wrong Password",
+          code: "INVALID_PASSWORD",
+          status: false,
+        });
     }
 
     const token = jwt.sign(
@@ -141,9 +153,13 @@ const loginUser = async (req, res) => {
       .status(200)
       .json({ message: "Login Successful", success: true, token: token });
   } catch (error) {
-    return res
-      .status(401)
-      .json({ message: "Invalid or expired token", success: false });
+    console.error("Login failed:", error);
+
+    return res.status(500).json({
+      success: false,
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Unable to sign in right now. Please try again later.",
+    });
   }
 };
 
@@ -173,16 +189,15 @@ const sendOTPController = async (req, res) => {
       }
     }
 
-    const findEmail = await userModel.findOne({email: req.body.email});
+    const findEmail = await userModel.findOne({ email: req.body.email });
 
-    if(findEmail) {
+    if (findEmail) {
       return res.status(400).json({
         message: "Email Address already exists, please sign in",
-        success: false
-      })
+        success: false,
+      });
     }
 
-    
     await sendOTPToEmail(req.body.email);
 
     return res

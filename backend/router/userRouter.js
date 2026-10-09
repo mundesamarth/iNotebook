@@ -45,7 +45,7 @@ routers.post(
     body("password")
       .isString()
       .withMessage("Invalid Password")
-      .isLength({ min: 6, max: 26 }),
+      .isLength({ min: 8, max: 26 }),
   ],
   loginUser,
 );
